@@ -1,8 +1,10 @@
 package config
 
 import (
+	"net"
 	"net/url"
 	"os"
+	"regexp"
 	"time"
 )
 
@@ -13,23 +15,68 @@ type Config struct {
 	RedisURL    string
 	JWTSecret   string
 
-	JWTAccessTTL   time.Duration
-	JWTRefreshTTL  time.Duration
-	JWT2FATempTTL  time.Duration
-	OAuthStateTTL  time.Duration
-	TOTPIssuer     string
+	JWTAccessTTL  time.Duration
+	JWTRefreshTTL time.Duration
+	JWT2FATempTTL time.Duration
+	OAuthStateTTL time.Duration
+	TOTPIssuer    string
 
 	GoogleOAuthClientID     string
 	GoogleOAuthClientSecret string
 	OAuthRedirectURL        string
 }
 
-func defaultDatabaseURL() string {
-	db := os.Getenv("POSTGRES_DB")
-	if db == "" {
-		db = "spa_booking"
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
 	}
-	return "postgres://127.0.0.1:5433/" + url.PathEscape(db) + "?sslmode=disable"
+	return def
+}
+
+// defaultDatabaseURL builds a DSN from POSTGRES_* when DATABASE_URL is unset.
+// Matches typical local docker-compose published port (POSTGRES_PORT default 5433).
+func defaultDatabaseURL() string {
+	host := envOr("POSTGRES_HOST", "127.0.0.1")
+	port := envOr("POSTGRES_PORT", "5433")
+	user := envOr("POSTGRES_USER", "spa")
+	pass := os.Getenv("POSTGRES_PASSWORD")
+	db := envOr("POSTGRES_DB", "spa_booking")
+
+	u := &url.URL{
+		Scheme: "postgres",
+		Host:   net.JoinHostPort(host, port),
+		Path:   "/" + url.PathEscape(db),
+	}
+	if pass != "" {
+		u.User = url.UserPassword(user, pass)
+	} else {
+		u.User = url.User(user)
+	}
+	q := url.Values{}
+	q.Set("sslmode", "disable")
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+// envDefaultSyntax matches bash-style ${VAR:-default} for values loaded from .env.
+// os.ExpandEnv only supports ${VAR} and $VAR.
+var envDefaultSyntax = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*):-([^}]*)\}`)
+
+func expandEnvDefaults(s string) string {
+	for envDefaultSyntax.MatchString(s) {
+		s = envDefaultSyntax.ReplaceAllStringFunc(s, func(match string) string {
+			sub := envDefaultSyntax.FindStringSubmatch(match)
+			if len(sub) != 3 {
+				return match
+			}
+			name, defVal := sub[1], sub[2]
+			if v := os.Getenv(name); v != "" {
+				return v
+			}
+			return defVal
+		})
+	}
+	return s
 }
 
 func Load() Config {
@@ -69,5 +116,6 @@ func getEnv(key, fallback string) string {
 	if v == "" {
 		v = fallback
 	}
+	v = expandEnvDefaults(v)
 	return os.ExpandEnv(v)
 }
