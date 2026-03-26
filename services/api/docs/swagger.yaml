@@ -1,0 +1,298 @@
+basePath: /
+definitions:
+  handler.AuthLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handler.AuthRegisterRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        type: string
+    type: object
+  handler.AuthTokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      user:
+        $ref: '#/definitions/handler.AuthUserBrief'
+    type: object
+  handler.AuthUserBrief:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      principal:
+        type: string
+      role:
+        type: string
+    type: object
+  handler.BookingCreated:
+    properties:
+      branch_id:
+        type: string
+      ends_at:
+        type: string
+      id:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.BranchRow:
+    properties:
+      address:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      timezone:
+        type: string
+    type: object
+  handler.BranchesResponse:
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/handler.BranchRow'
+        type: array
+    type: object
+  handler.CreateBookingRequest:
+    properties:
+      branch_id:
+        type: string
+      customer_email:
+        type: string
+      customer_name:
+        type: string
+      notes:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+    type: object
+  handler.HealthResponse:
+    properties:
+      service:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.ServiceRow:
+    properties:
+      branch_id:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price_cents:
+        type: integer
+    type: object
+  handler.ServicesResponse:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/handler.ServiceRow'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: 'REST API for branches, services, bookings, and auth (POST /api/v1/auth/register,
+    /api/v1/auth/login). WebSocket live updates: GET /ws/live (not in OpenAPI).'
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Spa Booking API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Email + password. Staff account is resolved before consumer. If
+        2FA enabled, returns two_factor_required and temp_token instead of tokens.
+      parameters:
+      - description: Email and password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AuthLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.AuthTokenResponse'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "401":
+          description: invalid credentials
+          schema:
+            type: string
+      summary: Sign in
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 'Consumer registration: email + password (min 8). Returns access_token,
+        refresh_token, and user.principal=consumer.'
+      parameters:
+      - description: Email, password, optional full_name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AuthRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.AuthTokenResponse'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "409":
+          description: email conflict
+          schema:
+            type: string
+      summary: Sign up
+      tags:
+      - auth
+  /api/v1/bookings:
+    post:
+      consumes:
+      - application/json
+      description: Validates branch/service, upserts customer by email, inserts booking
+        with computed end time from service duration.
+      parameters:
+      - description: Booking payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.BookingCreated'
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "404":
+          description: service not found for branch
+          schema:
+            type: string
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Create booking
+      tags:
+      - bookings
+  /api/v1/branches:
+    get:
+      description: Returns every spa branch ordered by name.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.BranchesResponse'
+      summary: List branches
+      tags:
+      - branches
+  /api/v1/services:
+    get:
+      description: Lists active services. When branch_id is provided, only services
+        for that branch are returned.
+      parameters:
+      - description: Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.ServicesResponse'
+        "400":
+          description: invalid branch_id
+          schema:
+            type: string
+      summary: List services
+      tags:
+      - services
+  /health:
+    get:
+      description: Liveness probe for load balancers and monitoring.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: Health check
+      tags:
+      - system
+schemes:
+- http
+- https
+swagger: "2.0"
+tags:
+- description: Register, login, refresh, logout, Google OAuth, 2FA, me
+  name: auth
+- description: Create and list bookings
+  name: bookings
+- description: Spa branches
+  name: branches
+- description: Services catalog
+  name: services
+- description: Health and ops
+  name: system

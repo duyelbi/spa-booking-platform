@@ -1,0 +1,24 @@
+# Git & VCS
+.git
+.gitignore
+
+# Docs (not needed in image)
+*.md
+
+# Build artifact from previous local builds
+server
+
+# Temp / cache
+tmp
+.cache
+
+# Secrets — never send into build context
+.env
+.env.*
+
+# Tests (not required for `go build` in Dockerfile)
+*_test.go
+
+# Tooling / IDE
+.vscode
+.idea

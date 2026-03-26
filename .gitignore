@@ -1,0 +1,34 @@
+# Secrets & local env (keep .env.example tracked)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+services/api/server
+bin/
+coverage.out
+*.test
+*.out
+
+# Node / frontend
+node_modules/
+.next/
+dist/
+build/
+
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Local Cursor / agent skills (not part of app source)
+.agents/
+skills-lock.json
