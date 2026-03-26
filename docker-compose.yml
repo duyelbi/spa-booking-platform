@@ -62,6 +62,21 @@ services:
       redis:
         condition: service_healthy
 
+  # Apply SQL migrations only (same embedded files as API). Does not start Redis.
+  # Usage: docker compose --profile tools run --rm migrate
+  migrate:
+    profiles: [tools]
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: spa-migrate
+    entrypoint: ["/app/migrate"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-spa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spa_booking}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redisdata:

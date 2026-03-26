@@ -36,6 +36,8 @@ With Docker Compose from the repo root, the **container** gets `DATABASE_URL` / 
 
 Optional overrides for this folder only: [`.env.example`](.env.example).
 
+**Migrations:** applied on every API startup (`internal/db.Migrate`). To run SQL only: `go run ./cmd/migrate` from this directory, or from repo root `docker compose --profile tools run --rm migrate`. **Backup / restore:** see [`scripts/README.md`](../../scripts/README.md).
+
 ## Authentication (`/api/v1/auth`)
 
 Identity lives in **one Postgres database** under schemas `consumer` (guests) and `staff` (admin / manager / employee) — no legacy `public.users` table:

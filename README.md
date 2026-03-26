@@ -45,6 +45,8 @@ Stop containers (keeps volumes):
 docker compose down
 ```
 
+**Postgres migrations & backup:** [`scripts/README.md`](scripts/README.md) — one-shot migrate (`docker compose --profile tools run --rm migrate`), `./scripts/db-backup.sh`, `./scripts/db-restore.sh`.
+
 **If a database password was ever pushed to GitHub:** treat it as compromised—rotate `POSTGRES_PASSWORD` (and any DB user password in use), and consider rewriting history ([`git filter-repo`](https://github.com/newren/git-filter-repo)) plus `git push --force` so scanners stop matching old commits. A new commit alone does not remove secrets from past revisions.
 
 ---

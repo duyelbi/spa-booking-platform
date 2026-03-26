@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Local DB dumps (see scripts/db-backup.sh)
+backups/
+
 # Logs
 *.log
 
