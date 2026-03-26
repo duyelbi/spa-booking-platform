@@ -28,7 +28,3 @@ build/
 *.swp
 *.swo
 *~
-
-# Local Cursor / agent skills (not part of app source)
-.agents/
-skills-lock.json
