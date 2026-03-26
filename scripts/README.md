@@ -1,5 +1,32 @@
 # Scripts — Postgres migrate & backup (Docker)
 
+## Makefile (repo root)
+
+Không cần gọi `./scripts/...` trực tiếp nếu dùng Make:
+
+```bash
+make help          # danh sách target
+make up            # docker compose up -d --build
+make down          # docker compose down
+make logs          # logs -f (một service: make logs s=api)
+make migrate-up
+make db-shell      # psql (dùng scripts/db-shell.sh)
+make backup
+make api-rebuild   # chỉ rebuild service api (gọi scripts/docker-rebuild-api.sh)
+make restore FILE=backups/postgres_....sql.gz
+```
+
+## Docker: rebuild API only
+
+Sau khi sửa code Go/Dockerfile của service `api`:
+
+```bash
+make api-rebuild
+# hoặc: ./scripts/docker-rebuild-api.sh
+```
+
+Chạy `docker compose build api` rồi `up -d api`. Postgres/Redis không rebuild; volume DB giữ nguyên.
+
 ## Schema migrations (SQL)
 
 - **Tự động:** Khi container `api` khởi động, server gọi `db.Migrate()` (file SQL trong `services/api/internal/db/migrations/`).

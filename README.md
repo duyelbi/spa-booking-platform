@@ -12,6 +12,7 @@ Monorepo for a spa-chain booking product: **Go API** + **PostgreSQL** + **Redis*
 ## Prerequisites
 
 - **Docker** + **Docker Compose** (recommended for Postgres, Redis, API)
+- **GNU Make** (optional: `make up`, `make help` — see [`Makefile`](Makefile))
 - **Go 1.23+** (optional: run API on host for debugging)
 - **Node.js** (when frontend apps are added under `apps/`)
 
@@ -30,7 +31,8 @@ Monorepo for a spa-chain booking product: **Go API** + **PostgreSQL** + **Redis*
 2. **Start the stack** (from the repository root)
 
    ```bash
-   docker compose up -d --build
+   make up
+   # or: docker compose up -d --build
    ```
 
 3. **Open**
@@ -42,10 +44,11 @@ Monorepo for a spa-chain booking product: **Go API** + **PostgreSQL** + **Redis*
 Stop containers (keeps volumes):
 
 ```bash
-docker compose down
+make down
+# or: docker compose down
 ```
 
-**Postgres migrations & backup:** [`scripts/README.md`](scripts/README.md) — one-shot migrate (`docker compose --profile tools run --rm migrate`), `./scripts/db-backup.sh`, `./scripts/db-restore.sh`.
+**Postgres migrations & backup:** [`scripts/README.md`](scripts/README.md) — shortcuts: `make migrate-up`, `make backup`, `make restore FILE=...`, or the underlying shell scripts.
 
 **If a database password was ever pushed to GitHub:** treat it as compromised—rotate `POSTGRES_PASSWORD` (and any DB user password in use), and consider rewriting history ([`git filter-repo`](https://github.com/newren/git-filter-repo)) plus `git push --force` so scanners stop matching old commits. A new commit alone does not remove secrets from past revisions.
 
