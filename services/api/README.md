@@ -25,7 +25,7 @@ At startup the server calls **`config.LoadEnvFiles()`** ([`internal/config/doten
 | Variable       | Purpose                   | Default (if unset)                                                     |
 | -------------- | ------------------------- | ---------------------------------------------------------------------- |
 | `HTTP_ADDR`    | Listen address            | `:8080`                                                                |
-| `DATABASE_URL` | Postgres DSN              | `postgres://spa:spa_secret@localhost:5432/spa_booking?sslmode=disable` |
+| `DATABASE_URL` | Postgres DSN              | Set in `.env` (see root `.env.example`); no default password in repo |
 | `REDIS_URL`    | Redis URL                 | `redis://localhost:6379/0`                                             |
 | `APP_ENV`      | Environment label         | `development`                                                          |
 | `JWT_SECRET`   | HS256 access tokens + OAuth state | `dev-secret-change-me` |

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"time"
 )
@@ -23,11 +24,19 @@ type Config struct {
 	OAuthRedirectURL        string
 }
 
+func defaultDatabaseURL() string {
+	db := os.Getenv("POSTGRES_DB")
+	if db == "" {
+		db = "spa_booking"
+	}
+	return "postgres://127.0.0.1:5433/" + url.PathEscape(db) + "?sslmode=disable"
+}
+
 func Load() Config {
 	return Config{
 		AppEnv:      getEnv("APP_ENV", "development"),
 		HTTPAddr:    getEnv("HTTP_ADDR", ":8080"),
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://spa:spa_secret@localhost:5432/spa_booking?sslmode=disable"),
+		DatabaseURL: getEnv("DATABASE_URL", defaultDatabaseURL()),
 		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		JWTSecret:   getEnv("JWT_SECRET", "dev-secret-change-me"),
 

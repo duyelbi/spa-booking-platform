@@ -23,7 +23,8 @@ Monorepo for a spa-chain booking product: **Go API** + **PostgreSQL** + **Redis*
 
    ```bash
    cp .env.example .env
-   # Edit .env if needed (ports, secrets).
+   # Set POSTGRES_PASSWORD (required for Docker Compose; e.g. openssl rand -base64 24).
+   # Set JWT_SECRET and other secrets; never commit `.env`.
    ```
 
 2. **Start the stack** (from the repository root)
@@ -43,6 +44,8 @@ Stop containers (keeps volumes):
 ```bash
 docker compose down
 ```
+
+**If a database password was ever pushed to GitHub:** treat it as compromised—rotate `POSTGRES_PASSWORD` (and any DB user password in use), and consider rewriting history ([`git filter-repo`](https://github.com/newren/git-filter-repo)) plus `git push --force` so scanners stop matching old commits. A new commit alone does not remove secrets from past revisions.
 
 ---
 
