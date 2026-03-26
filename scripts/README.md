@@ -2,60 +2,60 @@
 
 ## Makefile (repo root)
 
-Không cần gọi `./scripts/...` trực tiếp nếu dùng Make:
+You can use Make instead of calling `./scripts/...` directly:
 
 ```bash
-make help          # danh sách target
+make help          # list targets
 make up            # docker compose up -d --build
 make down          # docker compose down
-make logs          # logs -f (một service: make logs s=api)
+make logs          # logs -f (one service: make logs s=api)
 make migrate-up
-make db-shell      # psql (dùng scripts/db-shell.sh)
+make db-shell      # psql (via scripts/db-shell.sh)
 make backup
-make api-rebuild   # chỉ rebuild service api (gọi scripts/docker-rebuild-api.sh)
+make api-rebuild   # rebuild api service only (runs scripts/docker-rebuild-api.sh)
 make restore FILE=backups/postgres_....sql.gz
 ```
 
 ## Docker: rebuild API only
 
-Sau khi sửa code Go/Dockerfile của service `api`:
+After changing Go code or the `api` service Dockerfile:
 
 ```bash
 make api-rebuild
-# hoặc: ./scripts/docker-rebuild-api.sh
+# or: ./scripts/docker-rebuild-api.sh
 ```
 
-Chạy `docker compose build api` rồi `up -d api`. Postgres/Redis không rebuild; volume DB giữ nguyên.
+Runs `docker compose build api` then `up -d api`. Postgres/Redis images are not rebuilt; DB volumes are unchanged.
 
 ## Schema migrations (SQL)
 
-- **Tự động:** Khi container `api` khởi động, server gọi `db.Migrate()` (file SQL trong `services/api/internal/db/migrations/`).
-- **Chỉ chạy migrate (không bật API):**
+- **Automatic:** When the `api` container starts, the server runs `db.Migrate()` (SQL under `services/api/internal/db/migrations/`).
+- **Migrations only (no HTTP API):**
 
   ```bash
   docker compose --profile tools run --rm migrate
   ```
 
-  Cần Postgres healthy (`docker compose up -d postgres`). Dùng cùng `DATABASE_URL` nội bộ như service `api`.
+  Requires a healthy Postgres (`docker compose up -d postgres`). Uses the same internal `DATABASE_URL` as the `api` service.
 
-- **Trên máy (không Docker API):**
+- **On the host (no Docker API):**
 
   ```bash
   cd services/api && go run ./cmd/migrate
   ```
 
-  `.env` ở root repo phải có `DATABASE_URL` hoặc đủ biến `POSTGRES_*` (xem `internal/config`).
+  Root `.env` must define `DATABASE_URL` or enough `POSTGRES_*` variables (see `internal/config`).
 
 ## Backup
 
 ```bash
-chmod +x scripts/db-backup.sh   # một lần
+chmod +x scripts/db-backup.sh   # once
 ./scripts/db-backup.sh
 ```
 
-Tạo file nén `backups/postgres_<db>_<timestamp>.sql.gz` (thư mục `backups/` đã được `.gitignore`).
+Writes a gzip file `backups/postgres_<db>_<timestamp>.sql.gz` (the `backups/` directory is `.gitignore`d).
 
-Yêu cầu: `docker compose up -d postgres` và file `.env` có `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`.
+Requires: `docker compose up -d postgres` and `.env` with `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`.
 
 ## Restore
 
@@ -64,11 +64,11 @@ chmod +x scripts/db-restore.sh
 ./scripts/db-restore.sh backups/postgres_spa_booking_YYYYMMDD_HHMMSS.sql.gz
 ```
 
-Dump từ `db-backup.sh` dùng `--clean --if-exists`: restore có thể **xóa và tạo lại** object trong DB — chỉ chạy khi chắc chắn.
+Dumps from `db-backup.sh` use `--clean --if-exists`: restore may **drop and recreate** objects — run only when you intend to.
 
-## Redis (tùy chọn)
+## Redis (optional)
 
-Dữ liệu Redis nằm trong volume `redisdata`. Backup nhanh khi stack đang chạy:
+Redis data lives in the `redisdata` volume. Quick backup while the stack is running:
 
 ```bash
 docker compose exec redis redis-cli SAVE
@@ -76,4 +76,4 @@ docker run --rm -v spa-booking-platform_redisdata:/data -v "$(pwd)/backups:/out"
   cp /data/dump.rdb "/out/redis_$(date +%Y%m%d_%H%M%S).rdb"
 ```
 
-Tên volume có thể khác; kiểm tra: `docker volume ls | grep redis`.
+Volume names may differ; check with `docker volume ls | grep redis`.

@@ -44,8 +44,8 @@ Identity lives in **one Postgres database** under schemas `consumer` (guests) an
 
 | Schema | Tables | Purpose |
 | ------ | ------ | ------- |
-| `consumer` | `accounts`, `oauth_accounts`, `refresh_tokens` | Khách đặt lịch / đăng ký app |
-| `staff` | `accounts`, `profiles`, `oauth_accounts`, `refresh_tokens` | Admin, **manager**, **employee** (nhân viên) |
+| `consumer` | `accounts`, `oauth_accounts`, `refresh_tokens` | Guests booking / app sign-up |
+| `staff` | `accounts`, `profiles`, `oauth_accounts`, `refresh_tokens` | Admin, **manager**, **employee** |
 
 - **Register** and **Google OAuth** only create **consumer** rows. Staff accounts are created with SQL (or a future admin API).
 - **`POST /login`** tries **staff** first (same email), then **consumer**.
